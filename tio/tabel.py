@@ -12,6 +12,9 @@ def show():
         df = pd.read_excel(uploaded_file)
         st.success("✅ Data berhasil dimuat!")
 
+        # Simpan ke session state
+        st.session_state.df = df
+
         # Tampilkan tabel awal
         st.subheader("🧾 Tabel Data")
         st.dataframe(df.head())
@@ -28,7 +31,7 @@ def show():
             st.dataframe(df[col].value_counts())
 
         st.markdown("---")
-        st.subheader("📊 Visualisasi Histogram Usia")
+        st.subheader("📊 Histogram Usia")
         plt.figure(figsize=(8, 5))
         sns.histplot(df['Usia'], bins=10, kde=True, color='skyblue')
         plt.title("Distribusi Usia Responden")
@@ -59,6 +62,5 @@ def show():
         st.subheader("🔍 Crosstab Jenis Kelamin vs Pendidikan")
         ct = pd.crosstab(df['Jenis Kelamin'], df['Pendidikan Terakhir'])
         st.dataframe(ct)
-
     else:
         st.info("Silakan unggah file Excel untuk memulai eksplorasi data.")
