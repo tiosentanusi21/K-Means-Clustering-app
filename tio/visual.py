@@ -7,17 +7,16 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from sklearn.decomposition import PCA
 
-
 def show():
     st.title("📈 Visualisasi Klastering (KMeans - 3 Klaster Sesuai Analisis)")
 
-    if "data" not in st.session_state:
+    # Cek apakah data sudah ada di session_state
+    if "df" not in st.session_state:
         st.warning("⚠️ Harap unggah data terlebih dahulu di menu 'Tabel'.")
         return
 
-    df = st.session_state["data"].copy()
+    df = st.session_state.df.copy()
 
-    # Tetapkan urutan fitur eksplisit agar konsisten dengan model ML utama
     features = [
         "Tingkat Kunjungan dan Perilaku Wisata",
         "Persepsi terhadap Potensi Geyser Cisolok sebagai Warisan UNESCO",
@@ -26,29 +25,28 @@ def show():
     ]
 
     if not all(f in df.columns for f in features):
-        st.error("Pastikan dataset memiliki kolom: " + ", ".join(features))
+        st.error("Dataset tidak memiliki kolom: " + ", ".join(features))
         return
 
     # Normalisasi
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(df[features])
 
-    # Klastering dengan 3 klaster sesuai analisis
+    # KMeans Clustering
     kmeans_final = KMeans(n_clusters=3, random_state=42, n_init=10)
     df['Cluster'] = kmeans_final.fit_predict(X_scaled)
 
-    # Rata-rata tiap variabel per klaster
-    summary = df.groupby('Cluster')[features].mean().round(2)
+    # Summary tabel
     st.write("### 📊 Rata-rata Tiap Variabel per Cluster")
+    summary = df.groupby('Cluster')[features].mean().round(2)
     st.dataframe(summary)
 
-    # Jumlah responden per cluster
-    jumlah_responden = df['Cluster'].value_counts().sort_index()
+    # Jumlah responden
     st.write("### 👥 Jumlah Responden per Cluster")
-    for cluster, count in jumlah_responden.items():
+    for cluster, count in df['Cluster'].value_counts().sort_index().items():
         st.markdown(f"- **Cluster {cluster}**: {count} responden")
 
-    # Histogram rata-rata per variabel
+    # Histogram
     st.write("### 📌 Histogram Rata-rata Tiap Variabel")
     for col in summary.columns:
         fig, ax = plt.subplots(figsize=(5, 3))
@@ -62,7 +60,7 @@ def show():
         ax.grid(axis='y', linestyle='--', alpha=0.5)
         st.pyplot(fig)
 
-    # Visualisasi PCA (2D)
+    # PCA Scatter Plot
     st.write("### 🧭 Visualisasi Klaster (PCA 2D)")
     pca = PCA(n_components=2)
     X_pca = pca.fit_transform(X_scaled)
@@ -91,6 +89,5 @@ def show():
     ax.grid(True)
     st.pyplot(fig)
 
-    # Simpan hasil ke Excel (opsional)
-    df_download = df.copy()
-    st.download_button("📥 Unduh Data dengan Cluster", data=df_download.to_csv(index=False), file_name="Hasil_Clustering.csv", mime="text/csv")
+    # Download button
+    st.download_button("📥 Unduh Data dengan Cluster", data=df.to_csv(index=False), file_name="Hasil_Clustering.csv", mime="text/csv")
